@@ -83,7 +83,7 @@ def plot_clusters_with_centers(data, labels, centers, year1, year2):
                 color='black', s=300, label='Centers')
     plt.title(
         f'Clustering of Countries by GDP per Capita ({year1} vs {year2})',
-        fontsize=18,fontweight='bold')
+        fontsize=18, fontweight='bold')
     plt.xlabel(f'GDP per Capita in {year2}', fontsize=16)
     plt.ylabel(f'GDP per Capita in {year1}', fontsize=16)
     plt.legend(fontsize=16)
@@ -143,13 +143,13 @@ def fit_and_predict(gdp_df):
     """
     x_data = gdp_df['Year'] - gdp_df['Year'].min()
     y_data = gdp_df['GDP_per_capita']
-    
+
     # Adjusting initial parameter values for a better fit
     initial_params = [y_data.min(), 0.1, y_data.min()]
-    
+
     params, covar = curve_fit(
         exponential_growth, x_data, y_data, p0=initial_params)
-    
+
     # Limiting the prediction range to 10 years into the future
     future_years = np.array([40])
     future_x_data = np.max(x_data) + future_years
@@ -192,10 +192,10 @@ def plot_gdp_data(gdp_df, params, covar, start_year, future_x_data,
                      label='Confidence Interval')
     plt.scatter(start_year + future_x_data, future_predictions,
                 color='black', marker='x', label='Predictions')
-    plt.xlabel('Year',fontsize=16)
+    plt.xlabel('Year', fontsize=16)
     plt.ylabel('GDP Per Capita (USD)', fontsize=16)
     plt.title(
-        f'GDP Per Capita Over Time for {country_name}',fontsize=18, 
+        f'GDP Per Capita Over Time for {country_name}', fontsize=18,
         fontweight='bold')
     plt.legend(fontsize=16)
     plt.xticks(fontsize=16)
