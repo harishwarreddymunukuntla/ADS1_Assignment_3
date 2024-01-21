@@ -77,7 +77,7 @@ def plot_clusters_with_centers(data, labels, centers, year1, year2):
     plt.figure(figsize=(10, 8))
     for cluster, marker in zip(range(np.max(labels) + 1), marker_styles):
         cluster_data = data[labels == cluster]
-        plt.scatter(cluster_data[:, 0], cluster_data[:, 1], s=100,
+        plt.scatter(cluster_data[:, 0], cluster_data[:, 1], s=120,
                     marker=marker, label=f'Cluster {cluster}', alpha=0.7)
     plt.scatter(centers[:, 0], centers[:, 1], marker='*',
                 color='black', s=300, label='Centers')
@@ -86,9 +86,9 @@ def plot_clusters_with_centers(data, labels, centers, year1, year2):
         fontsize=18,fontweight='bold')
     plt.xlabel(f'GDP per Capita in {year2}', fontsize=16)
     plt.ylabel(f'GDP per Capita in {year1}', fontsize=16)
-    plt.legend(fontsize=14)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
+    plt.legend(fontsize=16)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.show()
 
 
@@ -197,9 +197,9 @@ def plot_gdp_data(gdp_df, params, covar, start_year, future_x_data,
     plt.title(
         f'GDP Per Capita Over Time for {country_name}',fontsize=18, 
         fontweight='bold')
-    plt.legend(fontsize=12)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
+    plt.legend(fontsize=16)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.grid(True)
     plt.yscale('log')
     plt.show()
