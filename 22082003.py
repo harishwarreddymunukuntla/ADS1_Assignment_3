@@ -62,24 +62,30 @@ def find_optimal_clusters(data, max_clusters=10):
     return optimal_clusters, silhouette_scores
 
 
-def plot_clusters_with_centers(data, labels, centers, year1, year2):
+def plot_clusters_with_centers(data, labels, centers, original_data, year1, year2):
     """
-    Plot the clusters along with their centers.
+    Plot the clusters along with their centers, showing the original GDP values on the axes.
 
     Parameters:
-    data (ndarray): The clustered data.
+    data (ndarray): The clustered data (normalized).
     labels (ndarray): Cluster labels for each data point.
-    centers (ndarray): Coordinates of the cluster centers.
+    centers (ndarray): Coordinates of the cluster centers (normalized).
+    original_data (DataFrame): The original data with GDP values.
     year1 (str): The first year for GDP data column.
     year2 (str): The second year for GDP data column.
     """
+    scaler = StandardScaler()
+    scaler.fit(original_data[[year1, year2]])
+    original_centers = scaler.inverse_transform(centers)
+
     marker_styles = ['o', 's', '^']
     plt.figure(figsize=(10, 8))
     for cluster, marker in zip(range(np.max(labels) + 1), marker_styles):
-        cluster_data = data[labels == cluster]
-        plt.scatter(cluster_data[:, 0], cluster_data[:, 1], s=120,
+        cluster_data_indices = np.where(labels == cluster)[0]
+        cluster_data = original_data.iloc[cluster_data_indices]
+        plt.scatter(cluster_data[year1], cluster_data[year2], s=120,
                     marker=marker, label=f'Cluster {cluster}', alpha=0.7)
-    plt.scatter(centers[:, 0], centers[:, 1], marker='*',
+    plt.scatter(original_centers[:, 0], original_centers[:, 1], marker='*',
                 color='black', s=300, label='Centers')
     plt.title(
         f'Clustering of Countries by GDP per Capita ({year1} vs {year2})',
@@ -89,6 +95,7 @@ def plot_clusters_with_centers(data, labels, centers, year1, year2):
     plt.legend(fontsize=16)
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
+    plt.grid(True)
     plt.show()
 
 
@@ -225,7 +232,7 @@ if __name__ == '__main__':
 
     # Plot clusters with centers
     plot_clusters_with_centers(
-        normalized_data, cluster_labels, kmeans.cluster_centers_, year1, year2)
+        normalized_data, cluster_labels, kmeans.cluster_centers_, gdp_data, year1, year2)
 
     # Load the full GDP data
     gdp_data = pd.read_csv(filepath, skiprows=4)
