@@ -85,7 +85,7 @@ def plot_clusters_with_centers(data, labels, centers, year1, year2):
         f'Clustering of Countries by GDP per Capita ({year1} vs {year2})',
         fontsize=18,fontweight='bold')
     plt.xlabel(f'GDP per Capita in {year2}', fontsize=16)
-    plt.ylabel(f'GDP per Capita in {year1}', fontsize=1)
+    plt.ylabel(f'GDP per Capita in {year1}', fontsize=16)
     plt.legend(fontsize=14)
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
@@ -240,9 +240,28 @@ if __name__ == '__main__':
         india_future_predictions, india_error_ranges = fit_and_predict(
             india_gdp_df)
 
+    # Fit model and make predictions for United Kingdom
+    uk_params, uk_covar, uk_start_year, uk_future_x_data, \
+        uk_future_predictions, uk_error_ranges = fit_and_predict(
+            uk_gdp_df)
+
+    # Fit model and make predictions for Sweden
+    Sweden_params, Sweden_covar, Sweden_start_year, Sweden_future_x_data, \
+        Sweden_future_predictions, Sweden_error_ranges = fit_and_predict(
+            Sweden_gdp_df)
 
     # Plotting for India
     plot_gdp_data(india_gdp_df, india_params, india_covar,
                   india_start_year,
                   india_future_x_data, india_future_predictions,
                   india_error_ranges, 'India')
+
+    # Plotting for United Kingdom
+    plot_gdp_data(uk_gdp_df, uk_params, uk_covar, uk_start_year,
+                  uk_future_x_data,
+                  uk_future_predictions, uk_error_ranges, 'United Kingdom')
+
+    # Plotting for Sweden
+    plot_gdp_data(Sweden_gdp_df, Sweden_params, Sweden_covar,
+                  Sweden_start_year, Sweden_future_x_data,
+                  Sweden_future_predictions, Sweden_error_ranges, 'Sweden')
