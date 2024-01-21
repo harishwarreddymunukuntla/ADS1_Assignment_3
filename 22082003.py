@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+import errors as err
 
 
 def load_and_clean_data(filepath, year1, year2):
@@ -89,6 +91,120 @@ def plot_clusters_with_centers(data, labels, centers, year1, year2):
     plt.yticks(fontsize=14)
     plt.show()
 
+
+def exponential_growth(x, a, b, c):
+    """
+    Exponential growth model.
+
+    Parameters:
+    x (ndarray): Independent variable.
+    a, b, c (float): Parameters of the model.
+
+    Returns:
+    ndarray: Calculated values of the dependent variable.
+    """
+    return a * np.exp(b * x) + c
+
+
+def extract_gdp_data(gdp_data, country_name):
+    """
+    Extract and process GDP data for a specific country.
+
+    Parameters:
+    gdp_data (DataFrame): Full GDP data.
+    country_name (str): Name of the country.
+
+    Returns:
+    DataFrame: Processed GDP data for the specified country.
+    """
+    country_gdp_df = gdp_data[gdp_data['Country Name'] == country_name]
+    country_gdp_values = country_gdp_df.iloc[0, 4:-1].values
+    years = country_gdp_df.columns[4:-1]
+    country_gdp_df_cleaned = pd.DataFrame(
+        {'Year': years, 'GDP_per_capita': country_gdp_values})
+    country_gdp_df_cleaned['Year'] = country_gdp_df_cleaned['Year'].astype(int)
+    country_gdp_df_cleaned['GDP_per_capita'] = pd.to_numeric(
+        country_gdp_df_cleaned['GDP_per_capita'], errors='coerce')
+    country_gdp_df_cleaned.dropna(inplace=True)
+    return country_gdp_df_cleaned
+
+
+def fit_and_predict(gdp_df):
+    """
+    Fit the exponential growth model to the GDP data and make future 
+    predictions.
+
+    Parameters:
+    gdp_df (DataFrame): GDP data of a specific country.
+
+    Returns:
+    tuple: Model parameters, covariance, start year, future years, 
+    predictions, and error ranges.
+    """
+    x_data = gdp_df['Year'] - gdp_df['Year'].min()
+    y_data = gdp_df['GDP_per_capita']
+    
+    # Adjusting initial parameter values for a better fit
+    initial_params = [y_data.min(), 0.1, y_data.min()]
+    
+    params, covar = curve_fit(
+        exponential_growth, x_data, y_data, p0=initial_params)
+    
+    # Limiting the prediction range to 10 years into the future
+    future_years = np.array([40])
+    future_x_data = np.max(x_data) + future_years
+    future_predictions = exponential_growth(future_x_data, *params)
+    error_ranges = err.error_prop(
+        future_x_data, exponential_growth, params, covar)
+    return params, covar, gdp_df['Year'].min(), future_x_data, \
+        future_predictions, error_ranges
+
+
+def plot_gdp_data(gdp_df, params, covar, start_year, future_x_data,
+                  future_predictions, error_ranges, country_name):
+    """
+    Plot the GDP data along with the model fit and future predictions.
+
+    Parameters:
+    gdp_df (DataFrame): GDP data of a specific country.
+    params (ndarray): Parameters of the fitted model.
+    covar (ndarray): Covariance matrix of the fitted model.
+    start_year (int): Starting year of the GDP data.
+    future_x_data (ndarray): Future years for prediction.
+    future_predictions (ndarray): Predicted values for future years.
+    error_ranges (ndarray): Error ranges for the predictions.
+    country_name (str): Name of the country.
+    """
+    plt.figure(figsize=(12, 6))
+    plt.scatter(gdp_df['Year'], gdp_df['GDP_per_capita'],
+                color='blue', label=f'Actual GDP Data ({country_name})')
+    years_extended = np.linspace(
+        gdp_df['Year'].min() - start_year, future_x_data.max(), 100)
+    gdp_fitted = exponential_growth(years_extended, *params)
+    plt.plot(start_year + years_extended, gdp_fitted,
+             color='red', label='Fitted Exponential Model')
+    error_extended = err.error_prop(
+        years_extended, exponential_growth, params, covar)
+    lower_bounds_extended = gdp_fitted - error_extended
+    upper_bounds_extended = gdp_fitted + error_extended
+    plt.fill_between(start_year + years_extended, lower_bounds_extended,
+                     upper_bounds_extended, color='green', alpha=0.3,
+                     label='Confidence Interval')
+    plt.scatter(start_year + future_x_data, future_predictions,
+                color='black', marker='x', label='Predictions')
+    plt.xlabel('Year',fontsize=16)
+    plt.ylabel('GDP Per Capita (USD)', fontsize=16)
+    plt.title(
+        f'GDP Per Capita Over Time for {country_name}',fontsize=18, 
+        fontweight='bold')
+    plt.legend(fontsize=12)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.grid(True)
+    plt.yscale('log')
+    plt.show()
+
+
 # Main execution block
 if __name__ == '__main__':
     # Load and clean data
@@ -114,4 +230,19 @@ if __name__ == '__main__':
     # Load the full GDP data
     gdp_data = pd.read_csv(filepath, skiprows=4)
 
-   
+    # Extract and process data for India and United Kingdom
+    india_gdp_df = extract_gdp_data(gdp_data, 'India')
+    uk_gdp_df = extract_gdp_data(gdp_data, 'United Kingdom')
+    Sweden_gdp_df = extract_gdp_data(gdp_data, 'Sweden')
+
+    # Fit model and make predictions for India
+    india_params, india_covar, india_start_year, india_future_x_data,\
+        india_future_predictions, india_error_ranges = fit_and_predict(
+            india_gdp_df)
+
+
+    # Plotting for India
+    plot_gdp_data(india_gdp_df, india_params, india_covar,
+                  india_start_year,
+                  india_future_x_data, india_future_predictions,
+                  india_error_ranges, 'India')
